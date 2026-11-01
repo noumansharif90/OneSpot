@@ -1,0 +1,35 @@
+INPUT VALIDATION IN ONESPOT
+===========================
+WHERE EACH CHECK LIVES
+  Typing level (is it a number? empty? has "|")  ->  InputHelper (UI)
+  Rule level (age 13..100, unique username, duration 1..43200, owner check)  ->  Logic
+
+  Problem                              How it is handled
+  -----------------------------------  ---------------------------------------------------------
+  letters where a number is expected   InputHelper.ReadInt: int.TryParse, prints "Please type a number." and asks again
+  empty field                          InputHelper.ReadText: asks again; Logic also re-checks
+  "|" in text                          InputHelper.ReadText refuses it
+  invalid menu choice                  every menu ends with  else  Console.WriteLine("Wrong choice!")
+  duplicate username                   UserLogic.UsernameExists
+  password and confirmation differ     UserLogic.Register / ChangePassword
+  bad email                            UserLogic.IsValidEmail  (@ and a dot after it, no spaces)
+  bad age                              13..100
+  wrong login                          3 attempts, then back to the main menu
+  invalid category / format / platform number    the UI asks again until the number is valid
+  invalid duration                     VideoLogic.IsValidDuration, asked again
+  video id that does not exist / belongs to someone else   FindOwnedById returns null -> "Video not found (or it is not yours)."
+  uploading to a disconnected platform    UploadUI.ChoosePlatforms refuses it
+  missing or damaged files             empty list / lines skipped (see 05_List_and_File_Handling)
+  endless loop when input ends         ReadLineSafe: Console.ReadLine() returns null -> Environment.Exit(0)
+
+STRING TOOLS USED
+  text.Trim()               remove spaces at both ends
+  text.ToLower()            all small letters (to compare without caring about capitals)
+  a.Contains(b)             is b inside a?     "My Match Final".ToLower().Contains("match")  -> true
+  text.StartsWith("Short")  does it begin with this?   (the "short video only" rule)
+  text.IndexOf('@')         position of a character, -1 if it is missing
+  text.Length               number of characters
+
+DATE AND TIME
+  DateTime.Now.ToString("yyyy-MM-dd")        2026-10-28         (video date)
+  DateTime.Now.ToString("yyyy-MM-dd HH:mm")  2026-10-28 14:30   (history)

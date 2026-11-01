@@ -1,0 +1,29 @@
+ENTITY: PLATFORM   (folder Platform/  - 8 files)
+================================================
+platforms.txt line:   userId|platformName|connected        e.g.  1|YouTube|True
+Each user has 5 lines (one per platform), so every user's connections are independent.
+Everything is a SIMULATION. Nothing logs in anywhere.
+
+Models (7 files): PlatformModel.cs (parent) + YouTubeModel.cs, TikTokModel.cs, InstagramModel.cs,
+                  FacebookModel.cs, XPlatformModel.cs (children).
+  The whole inheritance story (virtual, override, base) is in 03_Inheritance_Override_Polymorphism.txt.
+
+PlatformDataAccess.cs  (DATA ACCESS)
+  CreateAll()           builds a List<Platform> holding new YouTube(), new TikTok(), ... (polymorphism)
+  LoadForUser(userId)   starts from CreateAll() (everything NOT connected), then reads platforms.txt and
+                        for every line of THIS user sets p.Connected = true/false. Missing file = all disconnected.
+  SaveForUser(userId, list)
+                        1) reads the old file and keeps the lines of OTHER users unchanged
+                        2) adds 5 new lines for this user
+                        3) writes everything back.   So saving one user never touches another user's lines.
+
+PlatformLogic.cs  (LOGIC)
+  GetPlatforms(userId)
+  Connect(userId, index)      LoadForUser -> p = list[index] -> if already connected say so ->
+                              string message = p.Connect();   (each child's own message) -> SaveForUser
+  Disconnect(userId, index)   same idea. Index 0..4 = YouTube, TikTok, Instagram, Facebook, X.
+                              A wrong index returns "Invalid platform."
+
+PlatformUI.cs  (UI)
+  ConnectMenu(user)   1..5 connect that platform, 6 disconnect, 7 status, 8 back
+  ViewStatus(user)    foreach (Platform p in list) Console.WriteLine(p.GetStatus());

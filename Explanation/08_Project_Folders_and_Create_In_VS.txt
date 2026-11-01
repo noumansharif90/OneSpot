@@ -1,0 +1,32 @@
+WHAT THE FOLDERS AND FILES ARE, AND HOW TO CREATE THE PROJECT YOURSELF
+======================================================================
+
+IN THE PROJECT FOLDER
+  Admin, Dashboard, Helper, Platform, Upload, User, Video   our code, grouped by feature (7 folders)
+  Explanation                    these text files
+  Program.cs                     the starting point (Main)
+  OneSpot.csproj                 project settings: output type Exe (a program), .NET 8, namespace OneSpot,
+                                 nullable and implicit usings switched off to keep the code beginner-style
+  OneSpot.sln                    the "solution": the file you double-click; it lists the project(s)
+  bin\   (created by Build)      the finished program: OneSpot.exe, OneSpot.dll, ... in bin\Debug\net8.0\
+                                 The four txt data files are created there when you run
+  obj\   (created by Build)      temporary build files (safe to delete)
+  .vs\   (hidden, created by VS) Visual Studio's own private settings (safe to delete)
+  When you submit or share: send the folders and files you wrote, WITHOUT bin, obj and .vs.
+
+HOW TO CREATE A PROJECT LIKE THIS IN VISUAL STUDIO
+  1. Create a new project -> "Console App" (C#, the one that says .NET) -> Next.
+  2. Name it OneSpot, choose a location, Next -> Framework .NET 8 -> Create.
+     (Untick "Do not use top-level statements" if you see it, so you get a normal  static void Main  in Program.cs.)
+  3. Right-click the project in Solution Explorer -> Add -> New Folder -> name it User (do the same for Video ...).
+  4. Right-click a folder -> Add -> Class... -> name it UserModel.cs -> Add. Visual Studio writes
+     "namespace OneSpot { class UserModel { } }": rename the class to User and put your code in it.
+  5. Keep the same namespace (OneSpot) in every file so all classes can see each other without extra "using" lines.
+  6. Build with Ctrl+Shift+B (the Error List shows problems), run with Ctrl+F5.
+  7. If Solution Explorer is missing: View menu -> Solution Explorer, or Ctrl+Alt+L.
+
+KEYBOARD HELP
+  F12                  go to the definition of the method under the cursor
+  Ctrl+-               go back
+  F5, F10, F11         debug: start, step over a line, step into a method
+  Click the grey margin next to a line to put a red breakpoint there

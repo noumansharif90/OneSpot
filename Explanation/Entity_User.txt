@@ -1,0 +1,35 @@
+ENTITY: USER   (folder User/  - 4 files)
+=========================================
+users.txt line:   id|fullName|username|password|email|age
+
+UserModel.cs  (MODEL)
+  class User: private fields id, fullName, username, password, email, age.
+  Properties: Id and Username have only "get" (they never change after creation). The others have get and set.
+  Constructor with 6 values.   ToString() override prints "ID: 1 | Ali Khan | @ali | email | Age 20" (no password).
+
+UserDataAccess.cs  (DATA ACCESS)   filePath = Path.Combine(AppContext.BaseDirectory, "users.txt")
+  LoadAll():  file missing -> empty list. Otherwise ReadAllLines, foreach line: skip blank lines, Split('|'),
+              skip the line unless it has exactly 6 pieces and the numbers parse (int.TryParse),
+              then list.Add(new User(...)).  A damaged line is simply ignored, the program never crashes.
+  SaveAll(list): builds one line per user, File.WriteAllLines. Returns true if it worked, false on IOException.
+
+UserLogic.cs  (LOGIC)
+  GetAll()                  all users
+  NextId(list)              biggest id + 1  (private)
+  UsernameExists / FindByUsername   foreach with ToLower() so "Ali" and "ali" are the same
+  IsValidEmail(email)       has "@" not at the start, no spaces, a "." after the "@" and not at the end (private)
+  Register(...)             returns "OK" or an error text: empty fields, duplicate username, bad email,
+                            age 13..100, password at least 4 characters, password = confirmation. Then
+                            LoadAll, list.Add(new User), SaveAll.  Existing users are never lost because the
+                            old list is loaded first and the new user is added to it.
+  Login(username, password) returns the User or null
+  UpdateProfile(...)        changes name, email, age (not username/password); also updates the signed-in object
+  ChangePassword(...)       checks the current password first, then the new one and its confirmation
+
+UserUI.cs  (UI)
+  SignUp()        asks everything; checks the username early; prints success or the error from Register
+  SignIn()        3 attempts, returns the User or null
+  Profile(user)   shows id, name, username, email, age (NEVER the password); 1 edit / 2 back
+  ChangePassword(user)
+
+Security note: passwords are plain text in the file. In a real application you store a hash.

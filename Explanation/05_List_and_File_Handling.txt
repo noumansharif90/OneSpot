@@ -1,0 +1,47 @@
+LISTS, FOREACH AND FILE HANDLING IN ONESPOT
+===========================================
+
+THE STATELESS PATTERN (same in every Logic file)
+  Every Logic method:   1) list = dataAccess.LoadAll()   2) do the work   3) if something changed: dataAccess.SaveAll(list)
+  The program never keeps the list in memory between actions, so the file and the program can never disagree.
+
+LIST<T> THINGS USED
+  new List<Video>()          create an empty list
+  list.Add(v)                add
+  list.Remove(v)             remove
+  list.Count                 how many
+  list.Contains(p)           is this item already in the list (used to stop selecting a platform twice)
+  foreach (Video v in list)  visit every item
+
+THE FOREACH PATTERNS
+  1. FIND ONE, stop at once          foreach (...) { if (match) return v; }  return null;
+  2. COLLECT MATCHES (filter)        List<Video> result = new List<Video>(); foreach (...) { if (match) result.Add(v); } return result;
+  3. FIND AND CHANGE ONE             foreach (...) { if (v.Id == id && v.OwnerId == ownerId) { v.Title = x; return SaveAll(list); } }
+  4. BIGGEST + 1 (next id)           int max = 0; foreach (...) { if (v.Id > max) max = v.Id; }  return max + 1;
+  RULE: never Add/Remove while a foreach is still running over the same list. We return right after Remove.
+
+ARRAYS
+  VideoLogic.categories is a string[] array with 8 items. Arrays have a fixed size and use .Length
+  (a List uses .Count). categories[number - 1] because people count from 1 and arrays start at 0.
+
+FILE HANDLING (always inside a DataAccess file)
+  Path.Combine(AppContext.BaseDirectory, "videos.txt")   the file next to the program
+  File.Exists(path)           is there a file? (missing file = empty list, not a crash)
+  File.ReadAllLines(path)     string[] with one item per line
+  File.WriteAllLines(path, lines)   replaces the whole file with the lines
+  line.Split('|')             cuts one line into pieces:  "1|Ali|20".Split('|') -> { "1", "Ali", "20" }
+  int.TryParse(text, out n)   converts text to a number without crashing; returns true/false
+  try { ... } catch (IOException) { ... }   if the file cannot be opened we return an empty list / false
+
+WHY NOT LOSE OLD DATA?
+  We never create an empty file at start-up. Register loads ALL old users, adds one, and saves ALL of them.
+  The platforms file is rewritten the same way, but lines of other users are copied across first.
+
+DAMAGED LINES
+  if (parts.Length != 8) continue;          wrong number of pieces: skip the line
+  if (!int.TryParse(parts[0], out id)) continue;    the id is not a number: skip the line
+  "continue" jumps to the next line of the loop. The skipped line is not saved back, which cleans the file the next time it is saved.
+
+WHY "|" IS FORBIDDEN IN TEXT
+  The separator must never appear inside the data. InputHelper.ReadText refuses "|" and asks again.
+  (Spaces and commas are fine.)

@@ -1,0 +1,34 @@
+ENTITY: UPLOAD   (folder Upload/  - 4 files)
+============================================
+upload_history.txt line:   id|videoId|ownerId|platformName|status|dateTime
+                           1|1|1|YouTube|SUCCESS|2026-10-28 14:30
+This is the SIMULATED history of upload attempts. The video itself is saved once in videos.txt.
+Uploading one video to three platforms adds ONE video line and THREE history lines.
+
+UploadModel.cs  (MODEL)   class UploadRecord: id, videoId, ownerId, platformName, status ("SUCCESS"/"FAILED"), dateTime.
+
+UploadDataAccess.cs  (DATA ACCESS)   LoadAll / SaveAll, 6 pieces per line, damaged lines skipped.
+
+UploadLogic.cs  (LOGIC)
+  Upload(video, platform)
+       bool ok = platform.Upload(video);        <- polymorphism: the platform's own rule runs
+       status = ok ? "SUCCESS" : "FAILED"
+       LoadAll, new UploadRecord(NextId, video.Id, video.OwnerId, platform.Name, status, now), list.Add, SaveAll
+       returns the record so the UI can print the result.
+       A disconnected platform can never get here: the UI refuses it earlier, and Platform.Upload also
+       returns false when not connected, so success is never reported for a failed operation.
+  GetByOwner(ownerId)   only this user's history
+  Count()               for the admin's system information
+
+UploadUI.cs  (UI)
+  UploadVideo(user)
+     1. ask title, description, category (list), duration (must be 1..43200), format (list)
+     2. show the 5 platforms with their status; the user types numbers one by one, 0 = done
+        a disconnected platform is rejected, a wrong number is rejected, a duplicate is rejected
+     3. if none chosen: ask "Save the video in OneSpot without uploading?"  (n = cancel, nothing saved)
+        otherwise ask "Save the video and simulate upload to N platform(s)?" (n = cancel, nothing saved)
+     4. videoLogic.Add(...)  once
+     5. foreach chosen platform: uploadLogic.Upload(video, p) and print SUCCESS / FAILED (simulated)
+  ShowHistory(user)
+     the user's records, each with the video title from videoLogic.FindById(...), or "(video deleted)";
+     always labelled "(simulated)"; no statistics of any kind.

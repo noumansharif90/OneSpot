@@ -1,0 +1,33 @@
+ENTITY: VIDEO   (folder Video/  - 4 files)
+==========================================
+videos.txt line:   id|ownerId|title|description|category|duration|format|dateAdded
+Only the INFORMATION of a video is stored, never a video file.
+
+VideoModel.cs  (MODEL)
+  Private fields: id, ownerId (the user who owns it), title, description, category, duration (seconds),
+  format, dateAdded. Id, OwnerId, Duration, DateAdded are get-only. Title, Description, Category, Format can be edited.
+  Constructor with 8 values.   ToString() override: "ID: 1 | My Match | Sports | 120 sec | Short Video (9:16) | 2026-10-28".
+
+VideoDataAccess.cs  (DATA ACCESS)   LoadAll / SaveAll like UserDataAccess, 8 pieces per line.
+
+VideoLogic.cs  (LOGIC)
+  categories      a string ARRAY: Gaming, Education, Comedy, Sports, Technology, Islamic, Entertainment, Other
+  GetCategoryByNumber(n) / GetFormatByNumber(n)   number -> text, or null if the number is wrong
+  IsValidDuration(seconds)    1 to 43200
+  GetByOwner(ownerId)         only this user's videos  (this is how users are kept apart)
+  FindById(id)                any video (used for the history titles)
+  FindOwnedById(id, ownerId)  the video ONLY if it belongs to that user, else null  <- the ownership rule
+  Add(...)                    next id, today's date, list.Add, SaveAll; returns the Video (null if saving failed)
+  EditTitle / EditDescription / EditCategory / EditFormat (id, ownerId, newValue)
+                              find the video with BOTH the id and the owner; change; SaveAll.
+                              Another user's video can never match, so it returns false.
+  Delete(id, ownerId)         same check; list.Remove(v) then SaveAll then return at once (foreach rule)
+  SearchByTitle / SearchByCategory   ToLower() on both sides = case-insensitive; partial title with Contains
+
+VideoUI.cs  (UI)
+  AskCategory() / AskFormat()   show a numbered list and ask until the number is valid (used by UploadUI too)
+  ShowDetails(v)                prints every field
+  MyVideos(user)                lists the user's videos (Console.WriteLine(v) uses ToString), then optional details
+  EditVideo(user)               ask id (0 cancels) -> ownership check -> menu 1..5 -> call the matching Edit
+  DeleteVideo(user)             ask id -> ownership check -> shows the title -> asks y/n -> Delete
+  SearchVideos(user)            1 title (part), 2 category, 3 id, 4 back

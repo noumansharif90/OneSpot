@@ -1,0 +1,82 @@
+CONSTRUCTORS IN ONESPOT  (and ": base(...)")
+===========================================
+
+A constructor is a special method that runs ONCE, when an object is created with "new".
+It gives the object its starting values. It has the same name as the class and no return type.
+
+TYPE  NAME  =  new  CLASS( values );
+   User user = new User(1, "Ali Khan", "ali", "pass1", "ali@mail.com", 20);
+   ^type ^name        ^build one   ^values go to the constructor, in the SAME ORDER and TYPES
+
+
+ALL THE CONSTRUCTORS YOU WROTE
+-------------------------------
+1. User (User/UserModel.cs)
+       public User(int id, string fullName, string username, string password, string email, int age)
+       { this.id = id; this.fullName = fullName; ... }
+   Plain constructor: stores 6 values. Called in UserDataAccess.LoadAll (for each file line)
+   and in UserLogic.Register (for a new user).
+
+2. Video (Video/VideoModel.cs)
+       public Video(int id, int ownerId, string title, string description,
+                    string category, int duration, string format, string dateAdded)
+   Plain constructor: stores 8 values. Called in VideoDataAccess.LoadAll and VideoLogic.Add.
+
+3. UploadRecord (Upload/UploadModel.cs)
+       public UploadRecord(int id, int videoId, int ownerId, string platformName, string status, string dateTime)
+   Called in UploadDataAccess.LoadAll and UploadLogic.Upload.
+
+4. Platform (Platform/PlatformModel.cs)   <- the PARENT class
+       public Platform(string name, int maxSeconds)
+       { this.name = name; this.maxSeconds = maxSeconds; this.connected = false; }
+   Stores the name and the limit; "connected" always starts as false (you do not pass it).
+
+5. YouTube, TikTok, Instagram, Facebook, XPlatform   <- the CHILD classes
+       public YouTube() : base("YouTube", 43200)
+       {
+       }
+   No values come in (empty brackets), because a YouTube always has the same name and limit.
+   The values are sent UP to the parent constructor with ": base(...)".
+       new YouTube()    ->   runs  Platform("YouTube", 43200)   first, then the (empty) YouTube body.
+
+6. The classes with NO constructor (UserUI, VideoLogic, PlatformDataAccess, Program ...)
+   C# gives them a free empty constructor, so  new VideoLogic()  works with empty brackets.
+   Their fields are still built at that moment:  VideoLogic builds its  VideoDataAccess dataAccess = new ...
+
+
+WHAT ": base(...)" MEANS
+------------------------
+  "Before I build myself, build my parent part using these values."
+
+       class TikTok : Platform
+       {
+           public TikTok() : base("TikTok", 600)
+           { }
+       }
+
+  A TikTok object has two parts: the Platform part (name, connected, maxSeconds) and the TikTok part.
+  The Platform part can only be built by the Platform constructor, and that constructor REQUIRES
+  two values. ": base("TikTok", 600)" supplies them. The parent part is always built FIRST.
+
+  If you do not write ": base(...)" C# secretly writes ": base()" with empty brackets. Platform has no
+  constructor with empty brackets, so you get a compile error:
+        CS7036: There is no argument given that corresponds to the required parameter 'name' of 'Platform.Platform(string, int)'
+
+  ALTERNATIVES (all possible, ": base" is the usual one):
+    a) Give Platform an extra empty constructor:  public Platform() { }
+       Then the children need no ": base" and set their values through properties. (More typing in every child.)
+    b) Give the parent's parameters default values:  public Platform(string name = "Unknown", int maxSeconds = 60)
+    c) No inheritance at all: five separate classes, each repeating Name, Connected, Connect(), Disconnect()...
+       (That repeated code is exactly what inheritance removes.)
+
+
+THE "this." PART
+  Inside a constructor the parameter and the field often have the same name:
+       this.name = name;
+  "this.name" is the field of the object; "name" is the parameter that came in.
+
+CHECK YOURSELF
+  1. In  new Video(id, ownerId, title, description, category, duration, format, today)  what happens
+     if you leave out "today"?  (compile error: the constructor needs 8 values)
+  2. Why does  new Instagram()  have empty brackets but  new Video(...)  has eight values?
+  3. Which constructor runs FIRST when you write new Instagram()?  (Platform's)

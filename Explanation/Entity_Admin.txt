@@ -1,0 +1,15 @@
+ENTITY: ADMIN   (folder Admin/  - 2 files)
+==========================================
+The administrator is separate from normal users: main menu option 5, its own login, its own menu.
+TEST ACCOUNT (class project only):  username admin   password admin123
+It is written in AdminLogic.cs. Real applications never keep a password in the code.
+
+AdminLogic.cs  (LOGIC)    bool Login(username, password)  compares with the two fixed values.
+
+AdminUI.cs  (UI)
+  Start()    Login() with 3 attempts, then Menu()
+  Menu()     1 VIEW REGISTERED USERS   2 SEARCH USER BY USERNAME   3 SYSTEM INFORMATION   4 BACK
+  ViewUsers  Console.WriteLine(u) for every user  -> ToString() has no password, so the admin cannot see passwords
+  SearchUser FindByUsername (exact, any letter case)
+  SystemInfo number of users, saved videos, simulated upload records
+The admin has no Model or DataAccess file of its own: it uses User, Video and Upload through their Logic classes.

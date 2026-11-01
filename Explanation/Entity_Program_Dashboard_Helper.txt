@@ -1,0 +1,37 @@
+Program.cs, DashboardUI.cs, InputHelper.cs
+==========================================
+
+PROGRAM.CS  (UI)   - the starting point
+  static void Main()  is where every C# program starts.
+     UserUI userUI = new UserUI();   DashboardUI dashboardUI = new DashboardUI();   AdminUI adminUI = new AdminUI();
+     while (true) { show the welcome menu; read a choice; act; }
+  Choices:  1 SIGN UP    -> userUI.SignUp()
+            2 SIGN IN    -> User user = userUI.SignIn();  if (user != null) dashboardUI.Start(user);
+            3 ABOUT      -> ShowAbout()   (a static method of Program, prints the honest notes)
+            4 EXIT       -> break (leaves the loop, program ends)
+            5 ADMINISTRATOR -> adminUI.Start()
+            other        -> "Wrong choice!"
+  Data is saved immediately whenever it changes, so there is nothing left to save at exit.
+  Main has no user data of its own: a "User user" variable only exists while that person is signed in.
+
+DASHBOARDUI.CS  (UI)   - the 11-option menu after login
+  Holds: UserUI, PlatformUI, UploadUI, VideoUI.
+  public void Start(User user)   the user is a PARAMETER, handed to every screen:
+       1 MY PROFILE        userUI.Profile(user)             7 DELETE VIDEO     videoUI.DeleteVideo(user)
+       2 CONNECT PLATFORMS platformUI.ConnectMenu(user)     8 SEARCH VIDEOS    videoUI.SearchVideos(user)
+       3 PLATFORM STATUS   platformUI.ViewStatus(user)      9 UPLOAD HISTORY   uploadUI.ShowHistory(user)
+       4 UPLOAD VIDEO      uploadUI.UploadVideo(user)      10 CHANGE PASSWORD userUI.ChangePassword(user)
+       5 MY VIDEOS         videoUI.MyVideos(user)          11 LOGOUT          break  (leaves the loop)
+       6 EDIT VIDEO        videoUI.EditVideo(user)
+  Logout: the loop ends, Start() returns to Program.Main, the User variable there goes out of use.
+  The next person who signs in gets a brand-new User object, so nothing of the previous user is kept.
+
+INPUTHELPER.CS  (UI helper)  - static class
+  "static" means: no object needed. You write InputHelper.ReadInt("Age: ") straight away.
+  ReadLineSafe()   (private)  reads a line, trims spaces; if the input has ended (null) the program exits,
+                              so a script or Ctrl+Z can never cause an endless loop.
+  ReadInt(msg)     asks until the user types a whole number (int.TryParse, no crash on letters)
+  ReadText(msg)    asks until the text is not empty and does not contain "|"
+  AskYesNo(msg)    y / yes / n / no
+  Pause()          "Press any key to continue..." (Console.ReadKey)
+  Why a helper? Every screen needs the same safe input; writing it once avoids copying it 30 times.

@@ -1,0 +1,59 @@
+TESTING CHECKLIST  (17 scenarios)
+=================================
+Start with a clean state: close the program and delete users.txt, videos.txt, platforms.txt and
+upload_history.txt from  bin\Debug\net8.0\  (if they exist). Press Ctrl+F5.
+
+ 1  Successful registration
+      1 SIGN UP: Ali Khan / ali / ali@mail.com / 20 / pass1 / pass1      -> "Registration successful"
+ 2  Duplicate username
+      1 SIGN UP again with username ali (any letter case)                -> "This username is already taken."
+ 3  Mismatched passwords
+      1 SIGN UP: Sara Khan / sara / ... / abcd / abce                    -> "Passwords do not match."
+      (also try email "bademail" and age 5: both are rejected)
+ 4  Successful login
+      2 SIGN IN: ali / pass1                                             -> "Welcome, Ali Khan!" and the dashboard
+ 5  Failed login
+      2 SIGN IN with a wrong password three times                        -> "Too many failed attempts", back to main menu
+ 6  Connect and disconnect
+      2 CONNECT PLATFORMS -> 1, 2, 3  (YouTube, TikTok, Instagram)     -> "... connected (simulation only ...)"
+      7 VIEW ALL PLATFORM STATUS shows them CONNECTED; 6 DISCONNECT -> 3 -> Instagram NOT CONNECTED
+      Press 1 again on a connected platform                              -> "already connected"
+ 7  Upload to connected platforms
+      4 UPLOAD VIDEO: My Match / Best goals / Sports / 120 / Short Video; select 1 and 2, 0, y
+                                                                         -> YouTube SUCCESS, TikTok SUCCESS (simulated)
+      Upload a Long Video to TikTok                                      -> TikTok FAILED (simulated) with the rules shown
+ 8  Upload to a disconnected platform
+      In the platform selection type 4 (Facebook)                        -> "not connected", rejected
+      Type 9                                                             -> "Invalid platform number."
+ 9  View saved videos
+      5 MY VIDEOS lists only your videos; type an id for full details; unknown id -> "Video not found"
+10  Edit a video
+      6 EDIT VIDEO: id 1 -> 1 CHANGE TITLE; check in 5 MY VIDEOS. Try 0 to cancel.
+11  Delete after confirmation
+      7 DELETE VIDEO: id 1 -> shows the title -> n = nothing deleted; again -> y = deleted
+      9 UPLOAD HISTORY now shows "(video deleted)" for that video's old lines
+12  Search
+      8 SEARCH VIDEOS: 1 title "match" (partial, any case); 2 category Sports; 3 id; unknown -> "No matching videos found."
+13  Logout and login again
+      11 LOGOUT -> main menu; sign in again; your videos and connected platforms are still there
+14  Restart and persistence
+      Close the program completely, run again, sign in: videos, platforms and history are still there
+      (Open the 4 txt files in Notepad to see them.)
+15  Two different users
+      Sign up and sign in as sara: 5 MY VIDEOS is empty, 3 PLATFORM STATUS shows all NOT CONNECTED,
+      9 UPLOAD HISTORY is empty. Ali's data is not visible.
+16  Cannot touch another user's video
+      As sara: 6 EDIT VIDEO id 1 (Ali's) -> "Video not found (or it is not yours)."; 7 DELETE VIDEO id 1 -> same
+      As sara: 8 SEARCH 3 BY VIDEO ID 1 -> "No matching videos found."
+17  Missing or damaged files
+      Close the program. Delete platforms.txt (all platforms show NOT CONNECTED, no crash).
+      Add lines like  garbage  or  x|y|z  to users.txt in Notepad: the program starts normally and skips them.
+
+EXTRA
+      Administrator: main menu 5, admin / admin123: 1 view users (no passwords), 2 search sara, 3 system information.
+      Letters where a number is expected (menus, age, duration): "Please type a number." and no crash.
+      Change password: 10 CHANGE PASSWORD with a wrong current password is refused; after a change sign in with the new one.
+
+RESULT OF THE AUTOMATED TEST DONE WHEN THIS PROJECT WAS WRITTEN
+  Build: 0 errors, 0 warnings. A scripted session covered scenarios 1 to 17, the admin menu, the About screen,
+  invalid menu input, a restart, a deleted platforms.txt and damaged lines in the data files. All behaved as described above.

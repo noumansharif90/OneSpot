@@ -1,0 +1,91 @@
+THE FOUR LAYERS AND HOW THEY CONNECT
+====================================
+
+THE LAYERS (same idea as the hotel project)
+  MODEL           what a thing IS            fields, properties, constructor, ToString
+  BUSINESS LOGIC  the rules                  checks, searches, calculations; returns answers; no Console, no files
+  DATA ACCESS     where data is kept         the only code that reads / writes the .txt files
+  UI              what the user sees         Console.WriteLine / ReadLine, menus
+
+  Files are named  <Entity><Layer>.cs :  VideoModel.cs, VideoLogic.cs, VideoDataAccess.cs, VideoUI.cs.
+
+
+WHAT "CONNECTING" TWO LAYERS MEANS
+  Layers are ordinary classes. To use another class you need an OBJECT of it:
+
+       BookingLogic bookingLogic = new BookingLogic();       (hotel example)
+       VideoLogic   videoLogic   = new VideoLogic();         (OneSpot example)
+          ^type          ^name           ^build one
+
+  "new VideoLogic()" builds one real VideoLogic object. "videoLogic" is the name you use to reach it.
+  After that you write  videoLogic.Add(...)  and the Add method of that object runs.
+  You build the object ONCE as a field at the top of the class and reuse it in every method.
+
+  Without that line the class has nothing to talk to, and the compiler says
+  "The name 'videoLogic' does not exist in the current context".
+
+
+WHO HOLDS WHOM  (the calls only go downward)
+  UI classes        hold Logic objects         (and other UI classes for sub-screens)
+  Logic classes     hold a DataAccess object
+  DataAccess        holds no other layer       (it only uses File.xxx and Model objects)
+  Model             holds nothing              (Platform children only inherit from Platform)
+
+  UploadUI      holds  VideoLogic, VideoUI, PlatformLogic, UploadLogic
+  VideoUI       holds  VideoLogic
+  PlatformUI    holds  PlatformLogic
+  UserUI        holds  UserLogic
+  DashboardUI   holds  UserUI, PlatformUI, UploadUI, VideoUI
+  AdminUI       holds  AdminLogic, UserLogic, VideoLogic, UploadLogic
+  Program       holds  UserUI, DashboardUI, AdminUI      (created inside Main)
+  UserLogic     holds  UserDataAccess            VideoLogic holds VideoDataAccess
+  PlatformLogic holds  PlatformDataAccess        UploadLogic holds UploadDataAccess
+
+  Model objects (User, Video, Platform, UploadRecord) are not "held"; every layer just creates them
+  (new Video(...)) or receives them as parameters and return values.
+
+
+WHAT TRAVELS BETWEEN LAYERS
+  DOWN  (parameters):   values and objects          videoLogic.Add(user.Id, title, description, ...)
+  UP    (return values): answers                    Video v = videoLogic.Add(...);   bool, string, List<Video> ...
+
+  Examples of return types in this project:
+     bool            EditTitle(...)  Delete(...)         true = done
+     string          Register(...)  Connect(...)         "OK" or a message to print
+     Video           Add(...)  FindOwnedById(...)        the object, or null
+     List<Video>     GetByOwner(...)  SearchByTitle(..)  a list (may be empty)
+  The Logic NEVER prints the message. The UI receives it and prints it.
+
+
+FOLLOW "UPLOAD VIDEO" THROUGH THE LAYERS
+  DashboardUI.Start        user types 4
+        uploadUI.UploadVideo(user);                                       UI -> UI
+  UploadUI.UploadVideo     asks title, description, category, duration, format          (UI)
+        videoLogic.IsValidDuration(duration)                              UI -> LOGIC    (rule: 1..43200 sec)
+        platformLogic.GetPlatforms(user.Id)                               UI -> LOGIC
+          PlatformLogic.GetPlatforms -> dataAccess.LoadForUser(userId)    LOGIC -> DATA ACCESS
+            PlatformDataAccess reads platforms.txt, sets Connected true/false on 5 Platform objects
+        ChoosePlatforms(...)       shows the status, user picks numbers; disconnected ones are rejected   (UI)
+        videoLogic.Add(user.Id, title, ...)                               UI -> LOGIC
+          VideoLogic.Add: LoadAll, new Video(...), list.Add, SaveAll      LOGIC -> DATA ACCESS -> videos.txt
+        uploadLogic.Upload(video, p)   (once per chosen platform)         UI -> LOGIC
+          UploadLogic.Upload:  bool ok = platform.Upload(video);          LOGIC -> MODEL (polymorphism!)
+                               new UploadRecord(...), list.Add, SaveAll   LOGIC -> DATA ACCESS -> upload_history.txt
+        prints "YouTube: SUCCESS (simulated)"                             (UI prints what Logic returned)
+  Note: the video is saved only ONCE, even if you choose three platforms. Each platform adds only a
+  line to the upload history.
+
+
+FOLLOW "SIGN IN" THROUGH THE LAYERS
+  Program.Main             user types 2    ->  User user = userUI.SignIn();
+  UserUI.SignIn            asks username and password (3 attempts)
+        userLogic.Login(username, password)                               UI -> LOGIC
+          UserLogic.Login: foreach user in dataAccess.LoadAll() compare   LOGIC -> DATA ACCESS -> users.txt
+          returns the User object, or null
+  back in Program.Main:    if (user != null) dashboardUI.Start(user);
+  The logged-in User object is passed as a parameter to every dashboard screen.
+  When the user chooses LOGOUT, Start() ends, the variable disappears, and the next person starts clean.
+
+
+HOW TO ADD A NEW FEATURE (bottom-up order)
+  Model (new field)  ->  DataAccess (save/load it)  ->  Logic (rule)  ->  UI (screen)  ->  menu line

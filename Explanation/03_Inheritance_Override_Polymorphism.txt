@@ -1,0 +1,100 @@
+INHERITANCE, VIRTUAL, OVERRIDE, BASE AND POLYMORPHISM  (the Platform family)
+============================================================================
+
+THE FAMILY
+                        Platform                      (parent / base class)
+                           |
+     ------------------------------------------------
+     |          |           |            |          |
+  YouTube    TikTok     Instagram     Facebook   XPlatform        (children)
+
+  class Platform                      the parent: common things for all five
+  class YouTube : Platform            ":" means "is a kind of"; YouTube gets everything public of Platform
+
+
+WHAT THE PARENT PROVIDES (Platform/PlatformModel.cs)
+  fields (private)     name, connected, maxSeconds
+  properties           Name (get only), Connected (get/set), MaxSeconds (get only)
+  constructor          Platform(string name, int maxSeconds)
+  methods marked "virtual"  (children MAY replace them):
+       Connect()      connected = true;  returns a message
+       Disconnect()   connected = false; returns a message
+       GetRules()     "max N seconds"
+       GetStatus()    "YouTube : CONNECTED (simulated) [max 43200 seconds]"
+       Upload(video)  false if not connected; otherwise  video.Duration <= maxSeconds
+
+
+WHAT THE CHILDREN CHANGE ("override")
+  "virtual" in the parent = "you may change me".   "override" in the child = "I am changing it".
+  The line must match exactly: same name, same parameters, same return type.
+
+  YouTube, Facebook, XPlatform override only Connect():
+       public override string Connect()
+       {
+           base.Connect();                       // do the parent's work first (connected = true)
+           return "YouTube channel linked (simulation only, no real account used).";
+       }
+  "base.Connect()" means "run the PARENT's version of this method". Without it, "connected" would never
+  become true, because the child's version replaced the parent's one completely.
+
+  TikTok and Instagram also override Upload() and GetRules():
+       public override bool Upload(Video video)
+       {
+           if (!video.Format.StartsWith("Short"))     // extra rule: Short Video only
+               return false;
+           return base.Upload(video);                  // then the parent's rules (connected + max seconds)
+       }
+       public override string GetRules()
+       {
+           return base.GetRules() + ", Short Video (9:16) only";
+       }
+
+  Two different uses of "base":
+       : base(...)      after a constructor      sends values to the parent's CONSTRUCTOR
+       base.Method()    inside a method          runs the parent's version of that METHOD
+
+
+POLYMORPHISM  ("many forms")
+  PlatformDataAccess builds one List that holds all five different children:
+       List<Platform> list = new List<Platform>();
+       list.Add(new YouTube());
+       list.Add(new TikTok());
+       ...
+  The list type is Platform, but each item really is a YouTube, a TikTok ...
+  Then ONE line of code works for all of them:
+       foreach (Platform p in list)
+           Console.WriteLine(p.GetStatus());          // every item runs its own version
+       string message = p.Connect();                    // YouTube's or TikTok's Connect, decided at runtime
+       bool ok = platform.Upload(video);                 // TikTok applies the "short only" rule, YouTube does not
+
+  There is no "if (platform is TikTok)" anywhere. Adding a sixth platform later means: write one new
+  child class and add it to the list. UploadLogic, PlatformLogic and the UI do not change.
+
+  What would break without "virtual"/"override"?  If Upload were not virtual, p.Upload(video) would always
+  run the PARENT's version, and TikTok's short-only rule would never be used.
+
+
+OTHER OVERRIDES IN THE PROJECT
+  User.ToString()  and  Video.ToString()
+       Every class already has ToString() (inherited from C#'s built-in "object" class).
+       "public override string ToString()" replaces it, so  Console.WriteLine(video)  prints one nice line,
+       and  Console.WriteLine(user)  prints the user WITHOUT the password.
+
+
+ENCAPSULATION INSIDE THE PARENT
+  "connected" is private. Outside code cannot write p.connected = true.
+  It must go through the property (p.Connected = ...) or the method Connect(). A child class also cannot
+  touch the parent's private fields directly; it uses the properties and ": base(...)" instead.
+
+
+THE SIMULATION RULES (invented for practice)
+  YouTube   max 43200 s (12 h)         Facebook  max 14400 s (4 h)         X          max 140 s
+  TikTok    max 600 s, Short only      Instagram max 90 s,  Short only
+
+
+CHECK YOURSELF
+  1. Why does the child's Connect() call base.Connect()?
+  2. A "Long Video (16:9)" of 100 seconds is uploaded to TikTok. Which line decides FAILED?
+  3. Where would you change the rule for X to 280 seconds?  (XPlatform.cs: base("X", 280))
+  4. How would you add a LinkedIn platform?  (new LinkedInModel.cs: class LinkedIn : Platform; add it in
+     PlatformDataAccess.CreateAll and add a menu line)
